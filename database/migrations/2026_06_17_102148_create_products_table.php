@@ -13,7 +13,7 @@ return new class extends Migration {
             $table->string('title');
             $table->text('description');
             $table->unsignedInteger('price');
-            $table->enum('condition', ['new', 'like_new', 'good', 'fair']);
+            $table->enum('condition', ['new', 'like new', 'good', 'fair']);
             $table->boolean('negotiable')->default(false);
             $table->enum('status', ['available', 'sold'])->default('available');
             $table->unsignedBigInteger('views')->default(0);

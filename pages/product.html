@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - VitMart</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .product-detail { max-width: 900px; margin: 40px auto; background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,.1); overflow: hidden; }
+        .product-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; padding: 20px; background: #f9f9f9; }
+        .product-gallery img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; }
+        .product-info { padding: 30px; }
+        .product-info h1 { font-size: 28px; margin-bottom: 10px; }
+        .product-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+        .meta-item { padding: 10px; background: #f8fafc; border-radius: 8px; }
+        .meta-label { font-size: 12px; color: #777; text-transform: uppercase; }
+        .meta-value { font-size: 16px; font-weight: 600; color: #1e293b; }
+        .price-big { font-size: 32px; font-weight: 700; color: #0a66c2; }
+        .description { margin: 20px 0; line-height: 1.7; color: #555; }
+        .action-buttons { display: flex; gap: 15px; margin-top: 25px; flex-wrap: wrap; }
+        .action-buttons button { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; }
+        .btn-chat { background: #0a66c2; color: white; }
+        .btn-fav { background: #fee2e2; color: #b91c1c; }
+        .btn-contact { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        .seller-card { background: #f8fafc; padding: 20px; border-radius: 12px; margin-top: 20px; }
+        .loader { text-align: center; padding: 60px; font-size: 18px; color: #777; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+<nav>
+    <h1 class="logo"><span class="vit">VIT</span><span class="mart">Mart</span></h1>
+    <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="create-listing.html">Sell Item</a></li>
+        <li><a href="my-listing.html">My Listings</a></li>
+    </ul>
+</nav>
+
+<div id="loader" class="loader">Loading product details...</div>
+
+<div id="product-detail" class="product-detail hidden">
+    <div class="product-gallery" id="product-gallery"></div>
+    <div class="product-info">
+        <h1 id="product-title"></h1>
+        <div class="price-big" id="product-price"></div>
+        
+        <div class="product-meta">
+            <div class="meta-item">
+                <div class="meta-label">Category</div>
+                <div class="meta-value" id="product-category"></div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Condition</div>
+                <div class="meta-value" id="product-condition"></div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Negotiable</div>
+                <div class="meta-value" id="product-negotiable"></div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Views</div>
+                <div class="meta-value" id="product-views"></div>
+            </div>
+        </div>
+
+        <div class="description" id="product-description"></div>
+
+        <div class="action-buttons">
+            <button class="btn-chat" id="btn-chat">💬 Chat with Seller</button>
+            <button class="btn-fav" id="btn-fav">❤️ Add to Favourites</button>
+        </div>
+
+        <div class="seller-card">
+            <h3>Seller Information</h3>
+            <p id="seller-name"></p>
+            <p id="seller-email"></p>
+            <p id="seller-phone" class="hidden"></p>
+            <p id="seller-block"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+const token = localStorage.getItem('token');
+const productId = new URLSearchParams(window.location.search).get('id');
+
+if (!productId) {
+    document.getElementById('loader').textContent = 'No product specified.';
+} else {
+    loadProduct();
+}
+
+async function loadProduct() {
+    try {
+        const headers = { 'Accept': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch(`/products/${productId}`, { headers });
+        const product = await res.json();
+
+        document.getElementById('loader').classList.add('hidden');
+        document.getElementById('product-detail').classList.remove('hidden');
+
+        // Gallery
+        const gallery = document.getElementById('product-gallery');
+        if (product.images && product.images.length > 0) {
+            product.images.forEach(img => {
+                const el = document.createElement('img');
+                el.src = `/storage/${img.image_path}`;
+                el.onerror = function() { this.src = 'https://via.placeholder.com/300x200?text=Image'; };
+                gallery.appendChild(el);
+            });
+        } else {
+            gallery.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:#777;">No images available</p>';
+        }
+
+        document.getElementById('product-title').textContent = product.title;
+        document.getElementById('product-price').textContent = `₹${Number(product.price).toLocaleString()}`;
+        document.getElementById('product-category').textContent = product.category?.name || 'Others';
+        document.getElementById('product-condition').textContent = product.condition?.replace('_', ' ') || 'N/A';
+        document.getElementById('product-negotiable').textContent = product.negotiable ? 'Yes' : 'No';
+        document.getElementById('product-views').textContent = `${product.views} views`;
+        document.getElementById('product-description').textContent = product.description;
+
+        // Seller info
+        if (product.user) {
+            document.getElementById('seller-name').textContent = `👤 ${product.user.name}`;
+            document.getElementById('seller-email').textContent = `📧 ${product.user.email}`;
+            if (product.user.show_phone && product.user.phone) {
+                document.getElementById('seller-phone').textContent = `📞 ${product.user.phone}`;
+                document.getElementById('seller-phone').classList.remove('hidden');
+            }
+            document.getElementById('seller-block').textContent = `🏠 ${product.user.block || 'Main Campus'}`;
+        }
+
+        // Chat button
+        document.getElementById('btn-chat').addEventListener('click', async () => {
+            if (!token) { alert('Please login to chat.'); return; }
+            if (product.user_id === product.user?.id) { alert('You cannot chat with yourself.'); return; }
+            try {
+                const res = await fetch('/conversations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ product_id: product.id })
+                });
+                const data = await res.json();
+                if (data.id) alert('Conversation started! Check your messages.');
+            } catch(e) { alert('Failed to start conversation.'); }
+        });
+
+        // Favourite button
+        document.getElementById('btn-fav').addEventListener('click', async () => {
+            if (!token) { alert('Please login to add favourites.'); return; }
+            try {
+                await fetch(`/favourites/${product.id}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                alert('Added to favourites!');
+            } catch(e) { alert('Failed to add.'); }
+        });
+
+    } catch(e) {
+        document.getElementById('loader').textContent = 'Failed to load product.';
+    }
+}
+</script>
+</body>
+</html>
