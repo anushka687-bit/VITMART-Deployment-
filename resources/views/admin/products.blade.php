@@ -2,6 +2,8 @@
 @section('title', 'Products - VITMart Admin')
 @section('page-title', 'Products')
 
+@php use Illuminate\Support\Str; @endphp
+
 @section('content')
 <div class="breadcrumb-bar mb-3">
     <a href="{{ route('admin.dashboard') }}"><i class="bi bi-house-fill"></i></a>
@@ -98,7 +100,7 @@ function applyFilters() {
     if (s) p.set('search', s);
     if (c) p.set('created', c);
     if (sort) p.set('sort', sort);
-    window.location = '{{ route("admin.products.index") }}?' + p.toString();
+    window.location = @json(route('admin.products.index')) + '?' + p.toString();
 }
 document.getElementById('filter-category').onchange = applyFilters;
 document.getElementById('filter-created').onchange = applyFilters;

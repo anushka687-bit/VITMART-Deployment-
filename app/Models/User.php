@@ -13,7 +13,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'email', 'password', 'phone', 'block',
-        'avatar', 'show_phone', 'role', 'email_verified_at',
+        'avatar', 'show_phone', 'role', 'email_verified_at', 'is_blocked',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -22,11 +22,17 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password'          => 'hashed',
         'show_phone'        => 'boolean',
+        'is_blocked'        => 'boolean',
     ];
 
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    public function isBlocked(): bool
+    {
+        return $this->is_blocked;
     }
 
     public function products()
@@ -52,5 +58,15 @@ class User extends Authenticatable
     public function reportsMade()
     {
         return $this->hasMany(Report::class, 'reported_by');
+    }
+
+    public function reviewsReceived()
+    {
+        return $this->hasMany(Review::class, 'reviewed_user_id');
+    }
+
+    public function reviewsGiven()
+    {
+        return $this->hasMany(Review::class, 'user_id');
     }
 }

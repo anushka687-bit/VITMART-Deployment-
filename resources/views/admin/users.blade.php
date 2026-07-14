@@ -33,7 +33,7 @@
     <div class="table-responsive">
         <table class="admin-table">
             <thead>
-                <tr><th>Name</th><th>Email</th><th>Phone</th><th>Listings</th><th>Sold</th><th>Joined</th><th>Action</th></tr>
+                <tr><th>Name</th><th>Email</th><th>Phone</th><th>Listings</th><th>Sold</th><th>Joined</th><th>Status</th><th>Action</th></tr>
             </thead>
             <tbody>
                 @forelse($users as $u)
@@ -51,10 +51,21 @@
                     <td>{{ $u->products_count }}</td>
                     <td>{{ $u->sold_count }}</td>
                     <td>{{ $u->created_at->format('d M Y') }}</td>
-                    <td><a href="{{ route('admin.users.show', $u->id) }}" class="btn-admin btn-admin-primary btn-admin-sm">View</a></td>
+                    <td><span class="badge-status {{ $u->is_blocked ? 'pending' : 'available' }}">{{ $u->is_blocked ? 'Blocked' : 'Active' }}</span></td>
+                    <td>
+                        <div class="d-flex gap-1 flex-wrap">
+                            <a href="{{ route('admin.users.show', $u->id) }}" class="btn-admin btn-admin-primary btn-admin-sm">View</a>
+                            <form method="POST" action="{{ route('admin.users.toggle-block', $u->id) }}" style="display:inline;" onsubmit="return confirm('{{ $u->is_blocked ? 'Unblock' : 'Block' }} this user?')">
+                                @csrf @method('PATCH')
+                                <button type="submit" class="btn-admin {{ $u->is_blocked ? 'btn-admin-secondary' : 'btn-admin-danger' }} btn-admin-sm">
+                                    {{ $u->is_blocked ? 'Unblock' : 'Block' }}
+                                </button>
+                            </form>
+                        </div>
+                    </td>
                 </tr>
                 @empty
-                <tr><td colspan="7" class="text-center py-4 text-muted">No users found</td></tr>
+                <tr><td colspan="8" class="text-center py-4 text-muted">No users found</td></tr>
                 @endforelse
             </tbody>
         </table>

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\{Category, Product, Report, User, Setting};
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Storage, Validator};
+use Illuminate\Support\Facades\{Hash, Storage, Validator};
 
 class AdminController extends Controller
 {
@@ -182,6 +182,19 @@ class AdminController extends Controller
         return view('admin.user-detail', compact('user', 'listings', 'reportsReceived'));
     }
 
+    // ── Block / Unblock User ───────────────────────────────────
+    public function toggleBlockUser(int $id)
+    {
+        $user = User::findOrFail($id);
+        if ($user->isAdmin()) {
+            return back()->with('error', 'Admin accounts cannot be blocked.');
+        }
+
+        $user->update(['is_blocked' => !$user->is_blocked]);
+
+        return back()->with('success', $user->is_blocked ? 'User blocked.' : 'User unblocked.');
+    }
+
     // ── Product Detail ─────────────────────────────────────────
     public function productShow(int $id)
     {
@@ -250,7 +263,8 @@ class AdminController extends Controller
             'admin_email'      => Setting::get('admin_email', auth()->user()->email),
             'logo_path'        => Setting::get('logo_path', ''),
         ];
-        return view('admin.settings', compact('settings'));
+        $admins = User::where('role', 'admin')->orderBy('created_at')->get();
+        return view('admin.settings', compact('settings', 'admins'));
     }
 
     public function updateSettings(Request $request)
@@ -273,5 +287,48 @@ class AdminController extends Controller
         }
 
         return back()->with('success', 'Settings saved successfully.');
+    }
+
+    // ── Change own password (logged-in admin) ──────────────────
+    public function updatePassword(Request $request)
+    {
+        $v = Validator::make($request->all(), [
+            'current_password' => 'required',
+            'password'         => 'required|min:8|confirmed|different:current_password',
+        ]);
+        if ($v->fails()) return back()->withErrors($v)->withInput();
+
+        if (!Hash::check($request->current_password, auth()->user()->password)) {
+            return back()->withErrors(['current_password' => 'Current password is incorrect.']);
+        }
+
+        auth()->user()->update(['password' => Hash::make($request->password)]);
+
+        return back()->with('success', 'Your password has been changed.');
+    }
+
+    // ── Add another admin account ──────────────────────────────
+    public function storeAdmin(Request $request)
+    {
+        $v = Validator::make($request->all(), [
+            'admin_name'      => 'required|string|max:255',
+            'new_admin_email' => 'required|email|max:255|unique:users,email',
+            'admin_password'  => 'required|min:8|confirmed',
+        ], [], [
+            'admin_name'      => 'name',
+            'new_admin_email' => 'email',
+            'admin_password'  => 'password',
+        ]);
+        if ($v->fails()) return back()->withErrors($v)->withInput();
+
+        User::create([
+            'name'              => $request->admin_name,
+            'email'             => $request->new_admin_email,
+            'password'          => Hash::make($request->admin_password),
+            'role'              => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        return back()->with('success', "Admin account created for {$request->new_admin_email}.");
     }
 }

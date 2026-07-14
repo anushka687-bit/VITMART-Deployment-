@@ -36,37 +36,70 @@ class ProductController extends Controller
     public function show(int $id)
     {
         $product = Product::with(['user', 'category', 'images'])->findOrFail($id);
+        $product->incrementViews();
         if (!$product->user->show_phone) {
             $product->user->makeHidden('phone');
         }
         return response()->json($product);
     }
 
-    // Session-based actions
-    public function destroySession(Request $request, int $id)
+    public function store(Request $request)
     {
-        $product = Product::findOrFail($id);
-        if ($product->user_id !== auth()->id()) abort(403);
+        $v = Validator::make($request->all(), [
+            'category_id' => 'required|exists:categories,id',
+            'title'       => 'required|string|max:255',
+            'brand_name'  => 'nullable|string|max:255',
+            'description' => 'required|string',
+            'price'       => 'required|integer|min:0',
+            'condition'   => 'required|in:new,like_new,good,fair',
+            'negotiable'  => 'nullable|boolean',
+            'images'      => 'required|array|min:1|max:6',
+            'images.*'    => 'image|max:3072',
+        ]);
+        if ($v->fails()) return response()->json(['errors' => $v->errors()], 422);
+
+        $product = $request->user()->products()->create([
+            'category_id' => $request->category_id,
+            'brand_name'  => $request->brand_name,
+            'title'       => $request->title,
+            'description' => $request->description,
+            'price'       => $request->price,
+            'condition'   => $request->condition,
+            'negotiable'  => $request->boolean('negotiable'),
+        ]);
+
+        foreach ($request->file('images') as $img) {
+            $path = $img->store('products', 'public');
+            $product->images()->create(['image_path' => $path]);
+        }
+
+        return response()->json($product->load(['user', 'category', 'images']), 201);
+    }
+
+    public function destroy(Request $request, int $id)
+    {
+        $product = Product::with('images')->findOrFail($id);
+        if ($product->user_id !== $request->user()->id) abort(403);
         foreach ($product->images as $img) {
             Storage::disk('public')->delete($img->image_path);
         }
         $product->delete();
-        return back()->with('success', 'Listing deleted.');
+        return response()->json(['message' => 'Listing deleted.']);
     }
 
-    public function markSoldSession(Request $request, int $id)
+    public function markSold(Request $request, int $id)
     {
         $product = Product::findOrFail($id);
-        if ($product->user_id !== auth()->id()) abort(403);
+        if ($product->user_id !== $request->user()->id) abort(403);
         $product->update(['status' => 'sold']);
-        return back()->with('success', 'Marked as sold.');
+        return response()->json($product->fresh());
     }
 
-    public function markAvailableSession(Request $request, int $id)
+    public function markAvailable(Request $request, int $id)
     {
         $product = Product::findOrFail($id);
-        if ($product->user_id !== auth()->id()) abort(403);
+        if ($product->user_id !== $request->user()->id) abort(403);
         $product->update(['status' => 'available']);
-        return back()->with('success', 'Marked as available.');
+        return response()->json($product->fresh());
     }
 }

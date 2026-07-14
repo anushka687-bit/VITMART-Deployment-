@@ -53,8 +53,6 @@
         </div>
         <button type="submit" class="btn btn-primary w-100">Sign In</button>
     </form>
-    <hr class="my-4">
-    <p class="text-center mb-0" style="font-size:14px;">Don't have an account? <a href="{{ route('register') }}">Register here</a></p>
 </div>
 </body>
 </html>

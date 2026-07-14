@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Frontend (React) URL
+    |--------------------------------------------------------------------------
+    |
+    | The origin of the separate React frontend. Used to redirect back to the
+    | React site (e.g. after an admin logs out of the Blade admin panel) and
+    | as the default CORS-allowed origin for the session-based admin login.
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

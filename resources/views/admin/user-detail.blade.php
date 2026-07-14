@@ -15,20 +15,31 @@
     <div class="col-md-6">
         <div class="panel-card h-100">
             <div class="panel-card-header"><div class="panel-card-title">Profile Information</div></div>
-            <div class="d-flex align-items-center gap-3 mb-4">
-                <div style="width:60px; height:60px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:700;">
-                    {{ substr($user->name, 0, 1) }}
+            <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:60px; height:60px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:700;">
+                        {{ substr($user->name, 0, 1) }}
+                    </div>
+                    <div>
+                        <div style="font-size:18px; font-weight:700;">{{ $user->name }}</div>
+                        <div style="font-size:13px; color:var(--text-muted);">{{ $user->email }}</div>
+                    </div>
                 </div>
-                <div>
-                    <div style="font-size:18px; font-weight:700;">{{ $user->name }}</div>
-                    <div style="font-size:13px; color:var(--text-muted);">{{ $user->email }}</div>
-                </div>
+                @unless($user->isAdmin())
+                <form method="POST" action="{{ route('admin.users.toggle-block', $user->id) }}" onsubmit="return confirm('{{ $user->is_blocked ? 'Unblock' : 'Block' }} this user?')">
+                    @csrf @method('PATCH')
+                    <button type="submit" class="btn-admin {{ $user->is_blocked ? 'btn-admin-secondary' : 'btn-admin-danger' }} btn-admin-sm">
+                        {{ $user->is_blocked ? 'Unblock User' : 'Block User' }}
+                    </button>
+                </form>
+                @endunless
             </div>
             <div class="row g-3">
                 <div class="col-md-6"><div class="detail-label">Phone</div><div class="detail-value">{{ $user->phone ?: 'N/A' }}</div></div>
-                <div class="col-md-6"><div class="detail-label">Block</div><div class="detail-value">{{ $user->block ?: 'N/A' }}</div></div>
+                <div class="col-md-6"><div class="detail-label">Hostel Block</div><div class="detail-value">{{ $user->block ?: 'N/A' }}</div></div>
                 <div class="col-md-6"><div class="detail-label">Joined Date</div><div class="detail-value">{{ $user->created_at->format('d M Y') }}</div></div>
                 <div class="col-md-6"><div class="detail-label">Role</div><div class="detail-value"><span class="badge-status {{ $user->role === 'admin' ? 'pending' : 'available' }}">{{ ucfirst($user->role) }}</span></div></div>
+                <div class="col-md-6"><div class="detail-label">Status</div><div class="detail-value"><span class="badge-status {{ $user->is_blocked ? 'pending' : 'available' }}">{{ $user->is_blocked ? 'Blocked' : 'Active' }}</span></div></div>
             </div>
         </div>
     </div>

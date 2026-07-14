@@ -5,10 +5,10 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 
 /**
- * Demo product data removed for production.
+ * Demo/test user accounts removed for production.
  * No longer called by DatabaseSeeder — safe to delete this file.
  */
-class ProductSeeder extends Seeder
+class UserSeeder extends Seeder
 {
     public function run(): void
     {
