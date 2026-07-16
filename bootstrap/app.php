@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => AdminMiddleware::class,
         ]);
         $middleware->statefulApi();
+
+        // Behind Render/hosting proxies, trust X-Forwarded-* headers so
+        // Laravel knows requests arrived over HTTPS (correct URLs + secure
+        // session cookies).
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
