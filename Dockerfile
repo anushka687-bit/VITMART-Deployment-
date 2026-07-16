@@ -7,7 +7,7 @@ COPY . .
 RUN composer dump-autoload --optimize --no-scripts
 
 # ── Stage 2: Apache + PHP runtime ──────────────────────────────────
-FROM php:8.3-apache
+FROM php:8.4-apache
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libzip-dev zip unzip \
