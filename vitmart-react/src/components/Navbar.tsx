@@ -79,7 +79,7 @@ export function Navbar({
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
             {!isLoggedIn && (
-              <button onClick={() => setPage('adminLogin')} title="Admin" className="w-9 h-9 rounded-xl bg-muted hover:bg-accent flex items-center justify-center transition-colors">
+              <button onClick={() => { window.location.href = `${import.meta.env.VITE_ADMIN_URL}/login` }} title="Admin" className="w-9 h-9 rounded-xl bg-muted hover:bg-accent flex items-center justify-center transition-colors">
                 <Lock className="w-4 h-4" />
               </button>
             )}
@@ -205,7 +205,7 @@ export function Navbar({
               {isDark ? 'Light' : 'Dark'} Mode
             </button>
             {!isLoggedIn && (
-              <button onClick={() => { setPage('adminLogin'); setMobileOpen(false) }} className="flex items-center gap-1.5">
+              <button onClick={() => { window.location.href = `${import.meta.env.VITE_ADMIN_URL}/login` }} className="flex items-center gap-1.5">
                 <Lock className="w-4 h-4" /> Admin
               </button>
             )}
